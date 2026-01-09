@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import { Inter, Urbanist } from "next/font/google";
 import Link from "next/link";
+import { ShoppingBag } from "lucide-react";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
+import { CartProvider } from "@/lib/cart-context";
+import { CartBadge } from "@/components/cart-badge";
 import { UserMenu } from "@/components/user-menu";
 import { RealtimeNotifications } from "@/components/realtime-notifications";
+import { Footer } from "@/components/footer";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -34,6 +38,7 @@ export default function RootLayout({
         className={`${inter.variable} ${urbanist.variable} antialiased bg-white text-slate-900`}
       >
         <AuthProvider>
+        <CartProvider>
         {/* Header - přesně jako pyou.html */}
         <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200">
           <div className="w-full px-4 sm:px-6 lg:px-8">
@@ -77,6 +82,10 @@ export default function RootLayout({
                   Reference
                 </Link>
 
+                <Link href="/open-courses" className="text-slate-700 hover:text-blue-600 transition-colors font-medium">
+                  Otevřené kurzy
+                </Link>
+
                 <Link href="/posilame-to-dal" className="text-slate-700 hover:text-blue-600 transition-colors font-medium">
                   Posíláme to dál
                 </Link>
@@ -107,6 +116,9 @@ export default function RootLayout({
                   Kontakty
                 </Link>
 
+                {/* Shopping Cart */}
+                <CartBadge />
+
                 {/* Language switcher */}
                 <div className="flex items-center space-x-2 text-sm">
                   <span className="text-blue-600 font-semibold">cs</span>
@@ -116,8 +128,8 @@ export default function RootLayout({
                   </Link>
                 </div>
 
-                {/* User Menu */}
-                <UserMenu />
+                {/* User Menu - dočasně skryto */}
+                {/* <UserMenu /> */}
               </div>
 
               {/* Mobile menu button */}
@@ -137,6 +149,10 @@ export default function RootLayout({
         <RealtimeNotifications />
 
         {children}
+
+        {/* Footer */}
+        <Footer />
+        </CartProvider>
         </AuthProvider>
       </body>
     </html>
