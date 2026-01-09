@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
     // Ignorovat TypeScript chyby při production buildu (dočasně)
     ignoreBuildErrors: true,
   },
+  // Vypnout static export pro stránky které používají dynamické funkce
+  output: undefined,
 };
 
 export default nextConfig;
