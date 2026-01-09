@@ -5,6 +5,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createOrder, createOrderItems, generateVariableSymbol, formatPrice } from '@/lib/supabase';
 
+// Vypnout static generation pro tuto stránku
+export const dynamic = 'force-dynamic';
+
 export default function CheckoutPage() {
   const router = useRouter();
   const searchParams = useSearchParams();

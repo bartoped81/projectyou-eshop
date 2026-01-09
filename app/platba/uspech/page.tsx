@@ -5,6 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase, formatPrice, formatDate } from '@/lib/supabase';
 
+// Vypnout static generation pro tuto stránku
+export const dynamic = 'force-dynamic';
+
 export default function PaymentSuccessPage() {
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
