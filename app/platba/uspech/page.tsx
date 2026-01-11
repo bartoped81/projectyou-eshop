@@ -4,7 +4,8 @@ import Link from "next/link";
 import { CheckCircle, Home, Mail } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
+import { useCart } from "@/lib/cart-context";
 
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +15,12 @@ function OrderSuccessContent() {
   const variableSymbol = searchParams.get("variableSymbol");
   const totalAmount = searchParams.get("totalAmount");
   const orderId = searchParams.get("orderId");
+  const { clearCart } = useCart();
+
+  // Clear cart when the success page loads
+  useEffect(() => {
+    clearCart();
+  }, [clearCart]);
 
   // Generate QR payment string (Czech QR payment standard)
   const generateQRPaymentString = () => {

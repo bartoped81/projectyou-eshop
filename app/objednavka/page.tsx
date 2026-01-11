@@ -103,7 +103,7 @@ export default function CheckoutPage() {
         throw new Error(result.error || "Neznámá chyba při zpracování objednávky");
       }
 
-      // Redirect to success page with order details first, then clear cart
+      // Redirect to success page with order details
       const params = new URLSearchParams({
         orderId: result.orderId,
         variableSymbol: result.variableSymbol,
@@ -112,10 +112,7 @@ export default function CheckoutPage() {
       });
       router.push(`/platba/uspech?${params.toString()}`);
 
-      // Clear cart after navigation starts (with small delay to ensure navigation begins)
-      setTimeout(() => {
-        clearCart();
-      }, 100);
+      // Note: Cart will be cleared on the success page after it loads
     } catch (error) {
       console.error("Error processing order:", error);
       alert("Chyba při zpracování objednávky. Zkuste to prosím znovu.");
