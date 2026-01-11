@@ -88,6 +88,35 @@ function OrderSuccessContent() {
             </div>
           )}
 
+          {/* Card Payment Success */}
+          {paymentMethod === "card" && (
+            <div className="bg-green-50 rounded-lg p-6 mb-8">
+              <h3 className="font-semibold text-slate-900 mb-4 text-lg">
+                Platba kartou byla úspěšná
+              </h3>
+              <div className="text-left bg-white rounded-lg p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Uhrazená částka:</span>
+                  <span className="font-bold text-green-600 text-lg">
+                    {totalAmount ? parseFloat(totalAmount).toLocaleString("cs-CZ") : "0"} Kč
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Číslo objednávky:</span>
+                  <span className="font-mono text-slate-900">{orderId}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Variabilní symbol:</span>
+                  <span className="font-bold text-slate-900">{variableSymbol}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Stav platby:</span>
+                  <span className="font-bold text-green-600">Zaplaceno ✓</span>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Invoice Payment Info */}
           {paymentMethod === "invoice" && variableSymbol && (
             <div className="bg-blue-50 rounded-lg p-6 mb-8">
