@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   CourseWithDates,
@@ -25,6 +26,13 @@ interface DayEvent {
 
 export function EventsCalendar({ courses, onDateClick }: EventsCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [hoveredDay, setHoveredDay] = useState<number | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Získej rok a měsíc z currentDate
   const year = currentDate.getFullYear();
@@ -114,7 +122,92 @@ export function EventsCalendar({ courses, onDateClick }: EventsCalendarProps) {
     }
   };
 
+  // Handler pro najetí myší
+  const handleMouseEnter = (day: number, e: React.MouseEvent) => {
+    setHoveredDay(day);
+    const rect = e.currentTarget.getBoundingClientRect();
+    setTooltipPosition({
+      x: rect.left + rect.width / 2,
+      y: rect.top - 10,
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredDay(null);
+  };
+
+  // Formátování času
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Výpočet délky kurzu ve dnech
+  const getCourseDuration = (startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    return diffDays;
+  };
+
+  // Připrav tooltip obsah
+  const tooltipContent = hoveredDay !== null && mounted ? (() => {
+    const dateKey = `${year}-${month}-${hoveredDay}`;
+    const dayEvents = eventsMap.get(dateKey) || [];
+    const startEvents = dayEvents.filter(e => e.isStartDate);
+
+    if (startEvents.length === 0) return null;
+
+    return (
+      <div
+        className="fixed z-[9999] pointer-events-none"
+        style={{
+          left: `${tooltipPosition.x}px`,
+          top: `${tooltipPosition.y}px`,
+          transform: 'translate(-50%, -100%)',
+        }}
+      >
+        <div className="bg-slate-900 text-white rounded-lg shadow-2xl p-3 max-w-xs mb-2 border border-slate-700">
+          {startEvents.map((event, idx) => {
+            const availableSpots = event.courseDate.max_capacity - event.courseDate.current_booked_count;
+            return (
+              <div key={idx} className={idx > 0 ? 'mt-3 pt-3 border-t border-slate-700' : ''}>
+                <div className="font-bold text-sm mb-1.5">{event.course.title}</div>
+                <div className="text-xs space-y-1 text-slate-300">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-semibold text-white">📅</span>
+                    <span className="font-semibold text-white">
+                      {getCourseDuration(event.courseDate.start_date, event.courseDate.end_date)}denní kurz
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-semibold text-white">⏰</span>
+                    <span>{formatTime(event.courseDate.start_date)} - {formatTime(event.courseDate.end_date)}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-semibold text-white">📍</span>
+                    <span>{event.courseDate.location}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-semibold text-white">👥</span>
+                    <span className={availableSpots < 5 && availableSpots > 0 ? 'text-yellow-400 font-semibold' : availableSpots === 0 ? 'text-red-400 font-semibold' : ''}>
+                      {availableSpots > 0 ? `${availableSpots} volných míst` : 'Obsazeno'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  })() : null;
+
   return (
+    <>
     <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm sticky top-24">
       {/* Header s navigací */}
       <div className="flex items-center justify-between mb-6">
@@ -171,6 +264,8 @@ export function EventsCalendar({ courses, onDateClick }: EventsCalendarProps) {
             <button
               key={day}
               onClick={() => handleDayClick(day, events)}
+              onMouseEnter={(e) => hasEvents ? handleMouseEnter(day, e) : null}
+              onMouseLeave={handleMouseLeave}
               disabled={!hasStartEvents}
               className={`
                 aspect-square p-1 rounded-lg border transition-all relative
@@ -244,5 +339,9 @@ export function EventsCalendar({ courses, onDateClick }: EventsCalendarProps) {
         </div>
       </div>
     </div>
+
+    {/* Tooltip portal */}
+    {tooltipContent && createPortal(tooltipContent, document.body)}
+    </>
   );
 }

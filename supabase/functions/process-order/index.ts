@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 import pdfMake from "https://esm.sh/pdfmake@0.2.7/build/pdfmake.js";
 import pdfFonts from "https://esm.sh/pdfmake@0.2.7/build/vfs_fonts.js";
 
@@ -162,6 +163,7 @@ serve(async (req) => {
       totalPriceWithVat,
       paymentMethod,
       pdfBuffer,
+      items,
     });
 
     // 5. Optional: Upload to Google Drive (if credentials exist)
@@ -420,55 +422,223 @@ async function generateInvoicePDF(params: any): Promise<Uint8Array> {
 
 // Send order confirmation email with invoice
 async function sendOrderConfirmationEmail(params: any): Promise<void> {
-  const { email, firstName, lastName, variableSymbol, totalPriceWithVat, paymentMethod, pdfBuffer } = params;
+  const { email, firstName, lastName, variableSymbol, totalPriceWithVat, paymentMethod, pdfBuffer, items } = params;
 
-  const SMTP_USER = Deno.env.get("SMTP_USER");
-  const SMTP_PASS = Deno.env.get("SMTP_PASS");
+  const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+  const FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") || "onboarding@resend.dev";
 
-  if (!SMTP_USER || !SMTP_PASS) {
-    console.warn("SMTP credentials not configured, skipping email send");
+  if (!RESEND_API_KEY) {
+    console.warn("Resend API key not configured, skipping email send");
     return;
   }
+
+  const resend = new Resend(RESEND_API_KEY);
 
   // Convert Uint8Array to base64
   const base64PDF = btoa(String.fromCharCode(...pdfBuffer));
 
-  const paymentMethodText = {
-    invoice: "zálohovou fakturu",
-    qr: "QR kód",
-    card: "platební kartu",
-  }[paymentMethod];
+  // Determine if payment is already completed
+  const isPaymentCompleted = paymentMethod === "card" || paymentMethod === "qr";
 
-  const emailBody = `
-    <h2>Potvrzení objednávky - ProjectYOU</h2>
-    <p>Dobrý den ${firstName} ${lastName},</p>
-    <p>děkujeme za Vaši objednávku vzdělavacích kurzů v ProjectYOU.</p>
-    <h3>Detail objednávky:</h3>
-    <ul>
-      <li><strong>Variabilní symbol:</strong> ${variableSymbol}</li>
-      <li><strong>Celková částka:</strong> ${totalPriceWithVat.toLocaleString("cs-CZ")} Kč</li>
-      <li><strong>Způsob platby:</strong> ${paymentMethodText}</li>
-    </ul>
-    <p>V příloze naleznete zálohovou fakturu. Platba je splatná do 14 dnů od vystavení.</p>
-    <p>V případě jakýchkoli dotazů nás neváhejte kontaktovat.</p>
-    <p>S pozdravem,<br/>Tým ProjectYOU</p>
+  const paymentMethodText = {
+    invoice: "Zálohová faktura",
+    qr: "QR kód",
+    card: "Platební karta",
+  }[paymentMethod] || "Platební karta";
+
+  const invoiceType = paymentMethod === "invoice" ? "Zálohová faktura" : "Faktura";
+  const paymentStatusText = isPaymentCompleted
+    ? "✓ Platba byla úspěšně přijata"
+    : "⏳ Čeká se na platbu";
+
+  // Get first course info for the email (simplified for now)
+  const firstItem = items[0];
+  const courseName = firstItem.courseTitle;
+  const courseDate = new Date(firstItem.startDate).toLocaleDateString("cs-CZ", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+  const courseTime = `${new Date(firstItem.startDate).toLocaleTimeString("cs-CZ", {
+    hour: "2-digit",
+    minute: "2-digit",
+  })} - ${new Date(firstItem.endDate).toLocaleTimeString("cs-CZ", {
+    hour: "2-digit",
+    minute: "2-digit",
+  })}`;
+  const courseLocation = firstItem.location;
+  const participantCount = items.reduce((sum: number, item: OrderItem) => sum + item.quantity, 0);
+
+  // Create email HTML (inline since we can't easily import React components in Deno edge functions)
+  const emailHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Potvrzení objednávky - GrowPORT</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Ubuntu, sans-serif; background-color: #f6f9fc;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f6f9fc; padding: 20px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; max-width: 600px;">
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #1e40af; padding: 32px 40px; text-align: center;">
+              <h1 style="color: #ffffff; font-size: 32px; font-weight: bold; margin: 0; padding: 0;">GrowPORT</h1>
+              <p style="color: #93c5fd; font-size: 16px; margin: 8px 0 0 0;">Potvrzení objednávky - ${invoiceType}</p>
+            </td>
+          </tr>
+
+          <!-- Success Message -->
+          <tr>
+            <td style="padding: 40px 40px 20px 40px; text-align: center;">
+              <div style="font-size: 48px; margin: 0 0 16px 0;">✅</div>
+              <h2 style="color: #1e293b; font-size: 24px; font-weight: bold; margin: 0 0 12px 0;">Děkujeme za vaši objednávku!</h2>
+              <p style="color: #475569; font-size: 16px; line-height: 24px; margin: 0;">
+                Vaše registrace na kurz byla úspěšně dokončena. Těšíme se na viděnou!
+              </p>
+            </td>
+          </tr>
+
+          <tr><td style="padding: 0 40px;"><hr style="border: none; border-top: 1px solid #e2e8f0; margin: 0;"></td></tr>
+
+          <!-- Order Details -->
+          <tr>
+            <td style="padding: 24px 40px;">
+              <h3 style="color: #1e293b; font-size: 18px; font-weight: bold; margin: 0 0 16px 0;">Detaily objednávky</h3>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="color: #64748b; font-size: 14px; padding-bottom: 12px; width: 40%;">Číslo objednávky:</td>
+                  <td style="color: #1e293b; font-size: 14px; padding-bottom: 12px;">${variableSymbol}</td>
+                </tr>
+                <tr>
+                  <td style="color: #64748b; font-size: 14px; padding-bottom: 12px;">Jméno:</td>
+                  <td style="color: #1e293b; font-size: 14px; padding-bottom: 12px;">${firstName} ${lastName}</td>
+                </tr>
+                <tr>
+                  <td style="color: #64748b; font-size: 14px; padding-bottom: 12px;">Email:</td>
+                  <td style="color: #1e293b; font-size: 14px; padding-bottom: 12px;">${email}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr><td style="padding: 0 40px;"><hr style="border: none; border-top: 1px solid #e2e8f0; margin: 0;"></td></tr>
+
+          <!-- Course Details -->
+          <tr>
+            <td style="padding: 24px 40px;">
+              <h3 style="color: #1e293b; font-size: 18px; font-weight: bold; margin: 0 0 16px 0;">Informace o kurzu</h3>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="color: #64748b; font-size: 14px; padding-bottom: 12px; width: 40%;">Název kurzu:</td>
+                  <td style="color: #1e293b; font-size: 14px; padding-bottom: 12px;">${courseName}</td>
+                </tr>
+                <tr>
+                  <td style="color: #64748b; font-size: 14px; padding-bottom: 12px;">Datum:</td>
+                  <td style="color: #1e293b; font-size: 14px; padding-bottom: 12px;">${courseDate}</td>
+                </tr>
+                <tr>
+                  <td style="color: #64748b; font-size: 14px; padding-bottom: 12px;">Čas:</td>
+                  <td style="color: #1e293b; font-size: 14px; padding-bottom: 12px;">${courseTime}</td>
+                </tr>
+                <tr>
+                  <td style="color: #64748b; font-size: 14px; padding-bottom: 12px;">Místo konání:</td>
+                  <td style="color: #1e293b; font-size: 14px; padding-bottom: 12px;">${courseLocation}</td>
+                </tr>
+                <tr>
+                  <td style="color: #64748b; font-size: 14px; padding-bottom: 12px;">Počet účastníků:</td>
+                  <td style="color: #1e293b; font-size: 14px; padding-bottom: 12px;">${participantCount}</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr><td style="padding: 0 40px;"><hr style="border: none; border-top: 1px solid #e2e8f0; margin: 0;"></td></tr>
+
+          <!-- Payment Details -->
+          <tr>
+            <td style="padding: 24px 40px;">
+              <h3 style="color: #1e293b; font-size: 18px; font-weight: bold; margin: 0 0 16px 0;">Platební informace</h3>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="color: #64748b; font-size: 14px; padding-bottom: 12px; width: 40%;">Způsob platby:</td>
+                  <td style="color: #1e293b; font-size: 14px; padding-bottom: 12px;">${paymentMethodText}</td>
+                </tr>
+                <tr>
+                  <td style="color: #64748b; font-size: 14px; padding-bottom: 12px;">Celková částka:</td>
+                  <td style="color: #1e293b; font-size: 16px; font-weight: bold; padding-bottom: 12px;">${totalPriceWithVat.toLocaleString("cs-CZ")} Kč</td>
+                </tr>
+              </table>
+              <div style="background-color: ${isPaymentCompleted ? '#d1fae5' : '#fef3c7'}; color: ${isPaymentCompleted ? '#059669' : '#d97706'}; font-size: 14px; font-weight: 600; margin: 16px 0 0 0; padding: 12px; border-radius: 8px; text-align: center;">
+                ${paymentStatusText}
+              </div>
+            </td>
+          </tr>
+
+          <tr><td style="padding: 0 40px;"><hr style="border: none; border-top: 1px solid #e2e8f0; margin: 0;"></td></tr>
+
+          <!-- Next Steps -->
+          <tr>
+            <td style="padding: 24px 40px;">
+              <h3 style="color: #1e293b; font-size: 18px; font-weight: bold; margin: 0 0 16px 0;">Co dál?</h3>
+              <p style="color: #475569; font-size: 14px; line-height: 22px; margin: 0 0 12px 0;">
+                📧 Další instrukce a materiály k přípravě na kurz vám zašleme několik dní před začátkem.
+              </p>
+              <p style="color: #475569; font-size: 14px; line-height: 22px; margin: 0 0 12px 0;">
+                📍 Nezapomeňte si poznamenat datum, čas a místo konání kurzu.
+              </p>
+              <p style="color: #475569; font-size: 14px; line-height: 22px; margin: 0;">
+                📞 V případě jakýchkoliv dotazů nás neváhejte kontaktovat.
+              </p>
+            </td>
+          </tr>
+
+          <tr><td style="padding: 0 40px;"><hr style="border: none; border-top: 1px solid #e2e8f0; margin: 0;"></td></tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 40px; text-align: center;">
+              <p style="color: #64748b; font-size: 14px; line-height: 22px; margin: 0 0 12px 0;">
+                S pozdravem,<br/>
+                Tým GrowPORT
+              </p>
+              <p style="color: #64748b; font-size: 14px; line-height: 22px; margin: 0 0 20px 0;">
+                📧 info@growport.cz<br/>
+                🌐 www.growport.cz
+              </p>
+              <p style="color: #94a3b8; font-size: 12px; line-height: 18px; margin: 0;">
+                Tento email byl zaslán na adresu ${email} jako potvrzení vaší objednávky.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
   `;
 
-  // Using a simple fetch to an email service or SMTP relay
-  // For production, you'd want to use a proper email service like SendGrid, Mailgun, etc.
-  // Here's a simple example using a hypothetical email API:
-
   try {
-    // This is a placeholder - in production you'd use a real email service
-    // For now, just log that we would send an email
-    console.log(`Would send email to ${email} with VS: ${variableSymbol}`);
-    console.log(`Email body length: ${emailBody.length}`);
-    console.log(`PDF buffer size: ${pdfBuffer.length}`);
+    const result = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: `Potvrzení objednávky - ${courseName}`,
+      html: emailHTML,
+      attachments: [
+        {
+          filename: `faktura-${variableSymbol}.pdf`,
+          content: base64PDF,
+        },
+      ],
+    });
 
-    // TODO: Implement actual email sending with nodemailer or email service API
-    // Example with SendGrid, Mailgun, or SMTP relay would go here
+    console.log(`Email sent successfully to ${email}`, result);
   } catch (error) {
-    console.error("Error sending email:", error);
-    throw error;
+    console.error("Error sending email with Resend:", error);
+    // Don't throw - we don't want to fail the whole order if email fails
   }
 }
