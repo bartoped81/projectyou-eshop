@@ -12,8 +12,12 @@ import { CourseBlock } from "@/components/course-block";
 import { AI_COURSE_BLOCKS } from "@/lib/ai-course-blocks-data";
 import { LEDOVKA_BLOCKS } from "@/lib/ledovka-blocks-data";
 import { IMPROV_BLOCKS } from "@/lib/improv-blocks-data";
+import { AI_TAKEAWAYS } from "@/lib/ai-takeaways-data";
+import { LEDOVKA_TAKEAWAYS } from "@/lib/ledovka-takeaways-data";
+import { IMPROV_TAKEAWAYS } from "@/lib/improv-takeaways-data";
 import { TargetAudienceCard } from "@/components/target-audience-card";
 import { FeatureCard } from "@/components/feature-card";
+import { TakeawaysSection } from "@/components/takeaways-section";
 
 export default function CourseDetailPage() {
   const params = useParams();
@@ -197,6 +201,13 @@ export default function CourseDetailPage() {
                       ))}
                     </div>
                   </div>
+
+                  {/* Co si odnesete */}
+                  <TakeawaysSection
+                    title={AI_TAKEAWAYS.title}
+                    subtitle={AI_TAKEAWAYS.subtitle}
+                    items={AI_TAKEAWAYS.items}
+                  />
                 </>
               ) : slug === "ledove-dobrodruzstvi" ? (
                 /* Ledové dobrodružství - unified layout */
@@ -270,6 +281,12 @@ export default function CourseDetailPage() {
                       <CourseBlock key={index + 4} {...block} />
                     ))}
                   </div>
+
+                  {/* Co si odnesete */}
+                  <TakeawaysSection
+                    title={LEDOVKA_TAKEAWAYS.title}
+                    items={LEDOVKA_TAKEAWAYS.items}
+                  />
                 </>
               ) : slug === "aplikovana-improvizace" ? (
                 /* Aplikovaná improvizace - unified layout */
@@ -321,6 +338,12 @@ export default function CourseDetailPage() {
                       <CourseBlock key={index} {...block} />
                     ))}
                   </div>
+
+                  {/* Co si odnesete */}
+                  <TakeawaysSection
+                    title={IMPROV_TAKEAWAYS.title}
+                    items={IMPROV_TAKEAWAYS.items}
+                  />
                 </>
               ) : (
                 /* Fallback to HTML content for any other courses */

@@ -8,17 +8,8 @@ interface LecturerSectionProps {
 
 export function LecturerSection({ name, bio, photo }: LecturerSectionProps) {
   return (
-    <section className="py-20 bg-white border-t border-slate-200">
+    <section className="py-16 bg-white border-t border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold text-slate-900 sm:text-4xl">
-            Váš průvodce
-          </h2>
-          <p className="mt-4 text-xl text-slate-600 max-w-3xl mx-auto">
-            Kurz povede zkušený expert, který kombinuje teorii s praxí.
-          </p>
-        </div>
-
         <div className="grid md:grid-cols-2 gap-12 items-center max-w-5xl mx-auto">
           {/* Fotka lektora */}
           <div className="relative">
@@ -34,6 +25,9 @@ export function LecturerSection({ name, bio, photo }: LecturerSectionProps) {
 
           {/* Bio */}
           <div>
+            <p className="text-sm uppercase tracking-wider text-slate-500 font-bold mb-3">
+              Váš průvodce
+            </p>
             <h3 className="text-3xl font-bold text-slate-900 mb-6">{name}</h3>
             <div className="prose prose-slate max-w-none">
               <p className="text-slate-700 leading-relaxed whitespace-pre-line">
