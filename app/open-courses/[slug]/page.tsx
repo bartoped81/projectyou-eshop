@@ -7,15 +7,13 @@ import { CourseWithDates } from "@/lib/courses-loader";
 import { LecturerSection } from "@/components/lecturer-section";
 import { TermSelection } from "@/components/term-selection";
 import { getLecturerBySlug } from "@/lib/lecturers-data";
-import { ArrowDown, Zap, MessageSquare, Users2, Users, Shield } from "lucide-react";
+import { Zap, MessageSquare, Users2 } from "lucide-react";
 import { CourseBlock } from "@/components/course-block";
 import { AI_COURSE_BLOCKS } from "@/lib/ai-course-blocks-data";
+import { LEDOVKA_BLOCKS } from "@/lib/ledovka-blocks-data";
+import { IMPROV_BLOCKS } from "@/lib/improv-blocks-data";
 import { TargetAudienceCard } from "@/components/target-audience-card";
-import { AgendaBlock } from "@/components/agenda-block";
 import { FeatureCard } from "@/components/feature-card";
-import { LEDOVKA_AGENDA } from "@/lib/ledovka-data";
-import { ImprovModuleBlock } from "@/components/improv-module-block";
-import { IMPROV_MODULES } from "@/lib/improv-modules-data";
 
 export default function CourseDetailPage() {
   const params = useParams();
@@ -76,13 +74,6 @@ export default function CourseDetailPage() {
     loadCourse();
   }, [slug]);
 
-  const scrollToBooking = () => {
-    const bookingSection = document.getElementById("booking");
-    if (bookingSection) {
-      bookingSection.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -110,24 +101,9 @@ export default function CourseDetailPage() {
               <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight text-slate-900 mb-4">
                 {course.title}
               </h1>
-              <p className="text-xl text-slate-600 max-w-3xl mx-auto mb-6">
+              <p className="text-xl text-slate-600 max-w-3xl mx-auto">
                 {course.short_description}
               </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                {course.course_dates && course.course_dates.length > 0 && (
-                  <div className="inline-flex items-center px-4 py-2 rounded-full border border-blue-200 bg-blue-50 text-blue-700 text-sm font-medium">
-                    <span className="flex h-2 w-2 rounded-full bg-blue-600 mr-2 animate-pulse"></span>
-                    {course.course_dates.length} dostupných termínů
-                  </div>
-                )}
-                <button
-                  onClick={scrollToBooking}
-                  className="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold rounded-lg shadow-lg transition-all flex items-center gap-2"
-                >
-                  Vybrat termín <ArrowDown className="w-5 h-5" />
-                </button>
-              </div>
             </div>
           </div>
         </section>
@@ -223,199 +199,127 @@ export default function CourseDetailPage() {
                   </div>
                 </>
               ) : slug === "ledove-dobrodruzstvi" ? (
-                /* Ledové dobrodružství - structured layout */
+                /* Ledové dobrodružství - unified layout */
                 <>
                   {/* Pro koho je kurz určen */}
                   <div className="mb-12">
-                    <h2 className="text-3xl font-bold text-slate-900 mb-6 text-center">
-                      Pro koho je program určen?
-                    </h2>
-                    <p className="text-lg text-slate-600 max-w-3xl mx-auto text-center mb-8">
+                    <p className="text-lg text-slate-600 text-center max-w-3xl mx-auto">
                       Ideální pro lidi, kteří hledají autentický rozvoj a posílit
                       svůj leadership v náročných okamžicích.
                     </p>
 
-                    <div className="grid md:grid-cols-2 gap-6 mb-12">
+                    <div className="grid md:grid-cols-2 gap-4 max-w-5xl mx-auto mt-6">
                       <TargetAudienceCard
                         title="Leadery a Manažery"
                         description="Kteří potřebují trénovat rozhodování pod tlakem, práci s odporem a umění vést s pokorou a empatií."
                         icon="briefcase"
-                        bgColor="bg-sky-100"
-                        textColor="text-sky-600"
+                        bgColor="bg-blue-100"
+                        textColor="text-blue-600"
                       />
                       <TargetAudienceCard
                         title="Týmy a Oddělení"
                         description="Které chtějí posílit soudržnost, vzájemnou důvěru a schopnost otevřené komunikace v náročných časech."
                         icon="zap"
-                        bgColor="bg-amber-100"
-                        textColor="text-amber-600"
+                        bgColor="bg-cyan-100"
+                        textColor="text-cyan-600"
                       />
                     </div>
                   </div>
 
-                  {/* Průběh expedice */}
-                  <div className="mb-12">
-                    <div className="text-center mb-8">
-                      <h2 className="text-3xl font-bold text-slate-900 mb-4">
-                        Průběh expedice
-                      </h2>
-                      <p className="text-slate-600">
-                        Jeden den, který změní váš pohled na vedení lidí.
-                      </p>
+                  {/* Struktura programu - Intro text */}
+                  <div className="text-center mb-12">
+                    <h2 className="text-3xl font-bold text-slate-900 mb-4">
+                      Průběh expedice
+                    </h2>
+                    <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+                      Jeden den, který změní váš pohled na vedení lidí. Trénink asertivity a vyjednávání v realistickém prostředí polární expedice.
+                    </p>
+                  </div>
+
+                  {/* Bloky - první část (modré) */}
+                  <div className="space-y-6 mb-12">
+                    {LEDOVKA_BLOCKS.slice(0, 4).map((block, index) => (
+                      <CourseBlock key={index} {...block} />
+                    ))}
+                  </div>
+
+                  {/* Lunch Break */}
+                  <div className="flex items-center justify-center py-6 mb-12">
+                    <div className="inline-flex items-center px-6 py-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 text-sm font-medium">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-5 h-5 mr-2"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path d="M17 8h1a4 4 0 1 1 0 8h-1" />
+                        <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
+                        <line x1="6" x2="6" y1="2" y2="8" />
+                        <line x1="10" x2="10" y1="2" y2="8" />
+                        <line x1="14" x2="14" y1="2" y2="8" />
+                      </svg>
+                      12:45 – 13:45 Oběd a polární sdílení
                     </div>
+                  </div>
 
-                    <div className="space-y-4">
-                      {LEDOVKA_AGENDA.map((item, index) => (
-                        <AgendaBlock key={index} {...item} />
-                      ))}
-
-                      {/* Lunch Break */}
-                      <div className="flex items-center justify-center py-4 text-slate-400 text-sm font-medium">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="w-4 h-4 mr-2"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                        >
-                          <path d="M17 8h1a4 4 0 1 1 0 8h-1" />
-                          <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" />
-                          <line x1="6" x2="6" y1="2" y2="8" />
-                          <line x1="10" x2="10" y1="2" y2="8" />
-                          <line x1="14" x2="14" y1="2" y2="8" />
-                        </svg>
-                        12:45 – 13:45 Oběd a polární sdílení
-                      </div>
-
-                      {/* Final Block */}
-                      <div className="bg-slate-800 rounded-xl border border-slate-700 shadow-sm overflow-hidden text-white">
-                        <div className="p-6">
-                          <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                            <div className="px-4 py-2 bg-slate-700 text-slate-300 font-mono font-bold rounded-lg text-center min-w-[120px] text-sm">
-                              15:00 – 17:00
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="text-lg font-bold text-white mb-3">
-                                Návrat z expedice & Transfer do reality
-                              </h3>
-                              <ul className="space-y-3 text-sm text-slate-300">
-                                <li className="flex items-start">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="w-4 h-4 text-sky-400 mr-2 mt-0.5 shrink-0"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                  >
-                                    <circle cx="12" cy="12" r="10" />
-                                    <path d="m12 16 4-4-4-4" />
-                                    <path d="M8 12h8" />
-                                  </svg>
-                                  Reflexe zažitého: Co pro mě fungovalo?
-                                </li>
-                                <li className="flex items-start">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="w-4 h-4 text-sky-400 mr-2 mt-0.5 shrink-0"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                  >
-                                    <circle cx="12" cy="12" r="10" />
-                                    <path d="m12 16 4-4-4-4" />
-                                    <path d="M8 12h8" />
-                                  </svg>
-                                  Formulace osobních závazků pro každodenní
-                                  práci.
-                                </li>
-                                <li className="flex items-start">
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="w-4 h-4 text-sky-400 mr-2 mt-0.5 shrink-0"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                  >
-                                    <circle cx="12" cy="12" r="10" />
-                                    <path d="m12 16 4-4-4-4" />
-                                    <path d="M8 12h8" />
-                                  </svg>
-                                  Odnášíte si 1–2 konkrétní kroky, na kterých
-                                  začnete pracovat zítra.
-                                </li>
-                              </ul>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  {/* Bloky - druhá část (cyan) */}
+                  <div className="space-y-6">
+                    {LEDOVKA_BLOCKS.slice(4).map((block, index) => (
+                      <CourseBlock key={index + 4} {...block} />
+                    ))}
                   </div>
                 </>
               ) : slug === "aplikovana-improvizace" ? (
-                /* Aplikovaná improvizace - structured layout */
+                /* Aplikovaná improvizace - unified layout */
                 <>
                   {/* K čemu je to dobré */}
                   <div className="mb-12">
-                    <div className="text-center mb-10">
-                      <h2 className="text-3xl font-bold text-slate-900 mb-4">
-                        K čemu je to dobré v byznysu?
-                      </h2>
-                      <div className="w-20 h-1.5 bg-emerald-500 mx-auto rounded-full"></div>
-                    </div>
+                    <p className="text-lg text-slate-600 text-center max-w-3xl mx-auto mb-6">
+                      Improvizace není jen zábava – je to praktický nástroj pro byznys, který vám pomůže reagovat s lehkostí, vést týmy a komunikovat přesvědčivě.
+                    </p>
 
-                    <div className="grid md:grid-cols-3 gap-8 mb-12">
+                    <div className="grid md:grid-cols-3 gap-6">
                       <FeatureCard
                         icon={Zap}
                         title="Pohotovost"
                         description="Naučíte se reagovat s lehkostí i v úplně nepředvídatelných situacích před klientem nebo týmem."
-                        iconColor="text-emerald-600"
-                        iconBgColor="bg-emerald-100"
+                        iconColor="text-blue-600"
+                        iconBgColor="bg-blue-100"
                       />
                       <FeatureCard
                         icon={MessageSquare}
                         title="Storytelling"
                         description="Přirozeně rozvinete svůj hlas, projev a schopnost vyprávět příběhy, které lidi skutečně strhnou."
-                        iconColor="text-violet-600"
-                        iconBgColor="bg-violet-100"
+                        iconColor="text-cyan-600"
+                        iconBgColor="bg-cyan-100"
                       />
                       <FeatureCard
                         icon={Users2}
                         title="Spolupráce"
                         description='Poznáte základní principy "Ano, a...", které fungují na jevišti i v komunikaci a vztazích v běžném životě.'
-                        iconColor="text-amber-600"
-                        iconBgColor="bg-amber-100"
+                        iconColor="text-blue-600"
+                        iconBgColor="bg-blue-100"
                       />
                     </div>
                   </div>
 
-                  {/* Struktura workshopu */}
-                  <div className="mb-12">
-                    <div className="text-center mb-10">
-                      <h2 className="text-3xl font-bold text-slate-900 mb-4">
-                        Struktura workshopu
-                      </h2>
-                      <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-                        Jednodenní intenzivní prožitek v našem novém
-                        tréninkovém zázemí.
-                      </p>
-                    </div>
+                  {/* Struktura workshopu - Intro text */}
+                  <div className="text-center mb-12">
+                    <h2 className="text-3xl font-bold text-slate-900 mb-4">
+                      Struktura workshopu
+                    </h2>
+                    <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+                      Jednodenní intenzivní prožitek v našem novém tréninkovém zázemí. Od odstranění strachu z chyby až po aplikaci v reálném byznysu.
+                    </p>
+                  </div>
 
-                    <div className="space-y-6">
-                      {IMPROV_MODULES.map((module, index) => (
-                        <ImprovModuleBlock
-                          key={index}
-                          time={module.time}
-                          title={module.title}
-                          description={module.description}
-                          details={module.details}
-                          color={module.color}
-                        />
-                      ))}
-                    </div>
+                  {/* Bloky workshopu */}
+                  <div className="space-y-6">
+                    {IMPROV_BLOCKS.map((block, index) => (
+                      <CourseBlock key={index} {...block} />
+                    ))}
                   </div>
                 </>
               ) : (
@@ -476,7 +380,12 @@ export default function CourseDetailPage() {
             </p>
           </div>
           <button
-            onClick={scrollToBooking}
+            onClick={() => {
+              const bookingSection = document.getElementById("booking");
+              if (bookingSection) {
+                bookingSection.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-all"
           >
             Vybrat termín

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { CourseDate } from "@/lib/courses-loader";
 import { useCart } from "@/lib/cart-context";
 import { useRouter } from "next/navigation";
@@ -22,8 +23,13 @@ export function TermSelection({
   const [selectedTermId, setSelectedTermId] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [showModal, setShowModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { addItem } = useCart();
   const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleAddToCart = () => {
     if (!selectedTermId) return;
@@ -72,9 +78,17 @@ export function TermSelection({
 
   return (
     <div className="bg-white border border-slate-200 rounded-xl p-4 lg:p-5 lg:sticky lg:top-24">
-      <h3 className="text-xl font-bold text-slate-900 mb-3 font-urbanist">
-        Vyberte termín
-      </h3>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-xl font-bold text-slate-900 font-urbanist">
+          Vyberte termín
+        </h3>
+        {courseDates.length > 0 && (
+          <div className="inline-flex items-center px-2 py-1 rounded-full border border-blue-200 bg-blue-50 text-blue-700 text-xs font-medium">
+            <span className="flex h-1.5 w-1.5 rounded-full bg-blue-600 mr-1.5 animate-pulse"></span>
+            {courseDates.length} {courseDates.length === 1 ? 'volný termín' : courseDates.length < 5 ? 'volné termíny' : 'volných termínů'}
+          </div>
+        )}
+      </div>
 
       {/* Seznam termínů */}
       <div className="space-y-2 mb-4 max-h-[400px] overflow-y-auto">
@@ -176,13 +190,13 @@ export function TermSelection({
       </button>
 
       {/* Modal - Přidáno do košíku */}
-      {showModal && (
+      {showModal && mounted && createPortal(
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
           onClick={() => setShowModal(false)}
         >
           <div
-            className="bg-white rounded-xl shadow-xl max-w-md w-full p-6"
+            className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 relative z-[10000]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center mb-6">
@@ -224,7 +238,8 @@ export function TermSelection({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
