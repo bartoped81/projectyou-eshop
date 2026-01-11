@@ -24,6 +24,14 @@ interface DayEvent {
   isFull: boolean;
 }
 
+// Helper function for correct Czech pluralization
+function getAvailableSpotsText(count: number): string {
+  if (count === 0) return 'Obsazeno';
+  if (count === 1) return '1 volné místo';
+  if (count >= 2 && count <= 4) return `${count} volná místa`;
+  return `${count} volných míst`;
+}
+
 export function EventsCalendar({ courses, onDateClick }: EventsCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [hoveredDay, setHoveredDay] = useState<number | null>(null);
@@ -194,7 +202,7 @@ export function EventsCalendar({ courses, onDateClick }: EventsCalendarProps) {
                   <div className="flex items-center gap-1.5">
                     <span className="font-semibold text-white">👥</span>
                     <span className={availableSpots < 5 && availableSpots > 0 ? 'text-yellow-400 font-semibold' : availableSpots === 0 ? 'text-red-400 font-semibold' : ''}>
-                      {availableSpots > 0 ? `${availableSpots} volných míst` : 'Obsazeno'}
+                      {getAvailableSpotsText(availableSpots)}
                     </span>
                   </div>
                 </div>

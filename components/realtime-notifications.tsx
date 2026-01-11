@@ -10,6 +10,13 @@ interface Notification {
   timestamp: number;
 }
 
+// Helper function for correct Czech pluralization
+function getAvailableSpotsText(count: number): string {
+  if (count === 1) return '1 volné místo';
+  if (count >= 2 && count <= 4) return `${count} volná místa`;
+  return `${count} volných míst`;
+}
+
 export function RealtimeNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
@@ -44,7 +51,7 @@ export function RealtimeNotifications() {
               message = `Kurz "${courseData?.title}" je plně obsazen!`;
               type = 'error';
             } else if (availableSpots <= 3) {
-              message = `Kurz "${courseData?.title}" má pouze ${availableSpots} volná místa!`;
+              message = `Kurz "${courseData?.title}" má pouze ${getAvailableSpotsText(availableSpots)}!`;
               type = 'warning';
             } else {
               message = `Nová rezervace na kurz "${courseData?.title}"`;
