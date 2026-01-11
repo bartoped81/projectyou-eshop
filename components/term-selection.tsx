@@ -40,6 +40,7 @@ export function TermSelection({
       location: selectedTerm.location,
       quantity,
       pricePerPerson,
+      vatRate: 21, // Výchozí DPH sazba 21%
     });
 
     setShowModal(true);

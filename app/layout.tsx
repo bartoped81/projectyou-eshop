@@ -78,12 +78,26 @@ export default function RootLayout({
                   </div>
                 </div>
 
+                <div className="relative group">
+                  <Link href="/open-courses" className="text-slate-700 hover:text-blue-600 transition-colors font-medium py-2 inline-block">
+                    Otevřené kurzy
+                  </Link>
+                  {/* Dropdown pro Otevřené kurzy */}
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-white shadow-lg rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                    <Link href="/open-courses/ai-firemni-akcelerator" className="block px-4 py-3 text-slate-700 hover:bg-slate-50 hover:text-blue-600">
+                      AI Firemní Akcelerátor
+                    </Link>
+                    <Link href="/open-courses/aplikovana-improvizace" className="block px-4 py-3 text-slate-700 hover:bg-slate-50 hover:text-blue-600">
+                      Aplikovaná Improvizace
+                    </Link>
+                    <Link href="/open-courses/ledove-dobrodruzstvi" className="block px-4 py-3 text-slate-700 hover:bg-slate-50 hover:text-blue-600">
+                      Ledové dobrodružství
+                    </Link>
+                  </div>
+                </div>
+
                 <Link href="/reference" className="text-slate-700 hover:text-blue-600 transition-colors font-medium">
                   Reference
-                </Link>
-
-                <Link href="/open-courses" className="text-slate-700 hover:text-blue-600 transition-colors font-medium">
-                  Otevřené kurzy
                 </Link>
 
                 <Link href="/posilame-to-dal" className="text-slate-700 hover:text-blue-600 transition-colors font-medium">

@@ -11,6 +11,7 @@ export interface CartItem {
   location: string;
   quantity: number;
   pricePerPerson: number;
+  vatRate: number; // DPH sazba (např. 21 pro 21%)
 }
 
 interface CartContextType {
@@ -21,6 +22,9 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
+  totalPriceWithoutVat: number;
+  totalVat: number;
+  totalPriceWithVat: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -84,10 +88,24 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce(
+
+  // Cena bez DPH (pricePerPerson je už bez DPH)
+  const totalPriceWithoutVat = items.reduce(
     (sum, item) => sum + item.pricePerPerson * item.quantity,
     0
   );
+
+  // Celková DPH
+  const totalVat = items.reduce(
+    (sum, item) => sum + (item.pricePerPerson * item.quantity * item.vatRate) / 100,
+    0
+  );
+
+  // Celková cena s DPH
+  const totalPriceWithVat = totalPriceWithoutVat + totalVat;
+
+  // Zpětná kompatibilita
+  const totalPrice = totalPriceWithoutVat;
 
   return (
     <CartContext.Provider
@@ -99,6 +117,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         clearCart,
         totalItems,
         totalPrice,
+        totalPriceWithoutVat,
+        totalVat,
+        totalPriceWithVat,
       }}
     >
       {children}
