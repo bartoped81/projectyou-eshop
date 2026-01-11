@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
+import OrderConfirmationEmail from "@/emails/order-confirmation";
 
 interface OrderItem {
   courseDateId: string;
@@ -139,10 +141,43 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. Send confirmation email (optional - can be done asynchronously)
-    // For now, we'll skip email and PDF generation to get the basic flow working
-    // You can add this later using Resend API
-    console.log("Order created successfully:", order.id);
+    // 3. Send confirmation email
+    try {
+      const resendApiKey = process.env.RESEND_API_KEY;
+      const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
+
+      if (resendApiKey) {
+        const resend = new Resend(resendApiKey);
+
+        await resend.emails.send({
+          from: fromEmail,
+          to: userData.email,
+          subject: `Potvrzení objednávky #${variableSymbol} - ProjectYOU`,
+          react: OrderConfirmationEmail({
+            customerName: `${userData.firstName} ${userData.lastName}`,
+            customerEmail: userData.email,
+            variableSymbol,
+            items: items.map(item => ({
+              courseTitle: item.courseTitle,
+              startDate: item.startDate,
+              endDate: item.endDate,
+              location: item.location,
+              quantity: item.quantity,
+              pricePerPerson: item.pricePerPerson,
+            })),
+            totalPriceWithVat,
+            paymentMethod,
+          }),
+        });
+
+        console.log("Order created and confirmation email sent:", order.id);
+      } else {
+        console.log("Order created (email skipped - no API key):", order.id);
+      }
+    } catch (emailError) {
+      console.error("Failed to send confirmation email:", emailError);
+      // Don't fail the order if email fails
+    }
 
     return NextResponse.json({
       success: true,

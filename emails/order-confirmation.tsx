@@ -11,32 +11,36 @@ import {
   Column,
 } from '@react-email/components';
 
+interface OrderItem {
+  courseTitle: string;
+  startDate: string;
+  endDate: string;
+  location: string;
+  quantity: number;
+  pricePerPerson: number;
+}
+
 interface OrderConfirmationEmailProps {
   customerName: string;
   customerEmail: string;
-  orderId: string;
-  courseName: string;
-  courseDate: string;
-  courseTime: string;
-  courseLocation: string;
-  participantCount: number;
-  totalAmount: number;
-  paymentMethod: 'card' | 'qr';
+  variableSymbol: string;
+  items: OrderItem[];
+  totalPriceWithVat: number;
+  paymentMethod: 'invoice' | 'qr' | 'card';
 }
 
 export default function OrderConfirmationEmail({
   customerName,
   customerEmail,
-  orderId,
-  courseName,
-  courseDate,
-  courseTime,
-  courseLocation,
-  participantCount,
-  totalAmount,
+  variableSymbol,
+  items,
+  totalPriceWithVat,
   paymentMethod,
 }: OrderConfirmationEmailProps) {
-  const paymentMethodLabel = paymentMethod === 'card' ? 'Platební kartou' : 'QR platbou';
+  const paymentMethodLabel =
+    paymentMethod === 'card' ? 'Platební kartou' :
+    paymentMethod === 'qr' ? 'QR platbou' :
+    'Zálohovou fakturou';
 
   return (
     <Html>
@@ -45,7 +49,7 @@ export default function OrderConfirmationEmail({
         <Container style={container}>
           {/* Header */}
           <Section style={header}>
-            <Heading style={headerTitle}>GrowPORT</Heading>
+            <Heading style={headerTitle}>ProjectYOU</Heading>
             <Text style={headerSubtitle}>Potvrzení objednávky</Text>
           </Section>
 
@@ -66,7 +70,7 @@ export default function OrderConfirmationEmail({
 
             <Row style={detailRow}>
               <Column style={detailLabel}>Číslo objednávky:</Column>
-              <Column style={detailValue}>{orderId}</Column>
+              <Column style={detailValue}>{variableSymbol}</Column>
             </Row>
 
             <Row style={detailRow}>
@@ -84,32 +88,35 @@ export default function OrderConfirmationEmail({
 
           {/* Course Details */}
           <Section style={section}>
-            <Heading style={sectionHeading}>Informace o kurzu</Heading>
+            <Heading style={sectionHeading}>Objednané kurzy</Heading>
 
-            <Row style={detailRow}>
-              <Column style={detailLabel}>Název kurzu:</Column>
-              <Column style={detailValue}>{courseName}</Column>
-            </Row>
+            {items.map((item, index) => (
+              <div key={index} style={{ marginBottom: '20px', paddingBottom: '16px', borderBottom: index < items.length - 1 ? '1px solid #e2e8f0' : 'none' }}>
+                <Text style={{ ...detailValueBold, marginBottom: '8px' }}>{item.courseTitle}</Text>
 
-            <Row style={detailRow}>
-              <Column style={detailLabel}>Datum:</Column>
-              <Column style={detailValue}>{courseDate}</Column>
-            </Row>
+                <Row style={detailRow}>
+                  <Column style={detailLabel}>Datum:</Column>
+                  <Column style={detailValue}>
+                    {new Date(item.startDate).toLocaleDateString('cs-CZ')} - {new Date(item.endDate).toLocaleDateString('cs-CZ')}
+                  </Column>
+                </Row>
 
-            <Row style={detailRow}>
-              <Column style={detailLabel}>Čas:</Column>
-              <Column style={detailValue}>{courseTime}</Column>
-            </Row>
+                <Row style={detailRow}>
+                  <Column style={detailLabel}>Místo konání:</Column>
+                  <Column style={detailValue}>{item.location}</Column>
+                </Row>
 
-            <Row style={detailRow}>
-              <Column style={detailLabel}>Místo konání:</Column>
-              <Column style={detailValue}>{courseLocation}</Column>
-            </Row>
+                <Row style={detailRow}>
+                  <Column style={detailLabel}>Počet účastníků:</Column>
+                  <Column style={detailValue}>{item.quantity}</Column>
+                </Row>
 
-            <Row style={detailRow}>
-              <Column style={detailLabel}>Počet účastníků:</Column>
-              <Column style={detailValue}>{participantCount}</Column>
-            </Row>
+                <Row style={detailRow}>
+                  <Column style={detailLabel}>Cena za osobu:</Column>
+                  <Column style={detailValue}>{item.pricePerPerson.toLocaleString('cs-CZ')} Kč</Column>
+                </Row>
+              </div>
+            ))}
           </Section>
 
           <Hr style={divider} />
@@ -123,14 +130,35 @@ export default function OrderConfirmationEmail({
               <Column style={detailValue}>{paymentMethodLabel}</Column>
             </Row>
 
+            {paymentMethod === 'invoice' && (
+              <>
+                <Row style={detailRow}>
+                  <Column style={detailLabel}>Variabilní symbol:</Column>
+                  <Column style={detailValue}>{variableSymbol}</Column>
+                </Row>
+                <Row style={detailRow}>
+                  <Column style={detailLabel}>Číslo účtu:</Column>
+                  <Column style={detailValue}>123456789/0100</Column>
+                </Row>
+              </>
+            )}
+
             <Row style={detailRow}>
               <Column style={detailLabel}>Celková částka:</Column>
-              <Column style={detailValueBold}>{totalAmount.toLocaleString('cs-CZ')} Kč</Column>
+              <Column style={detailValueBold}>{totalPriceWithVat.toLocaleString('cs-CZ')} Kč</Column>
             </Row>
 
-            <Text style={paymentNote}>
-              ✓ Platba byla úspěšně přijata
-            </Text>
+            {paymentMethod === 'card' && (
+              <Text style={paymentNote}>
+                ✓ Platba byla úspěšně přijata
+              </Text>
+            )}
+
+            {paymentMethod === 'invoice' && (
+              <Text style={{ ...paymentNote, backgroundColor: '#fef3c7', color: '#92400e' }}>
+                ⏳ Očekáváme platbu na uvedený účet
+              </Text>
+            )}
           </Section>
 
           <Hr style={divider} />
@@ -155,11 +183,11 @@ export default function OrderConfirmationEmail({
           <Section style={footer}>
             <Text style={footerText}>
               S pozdravem,<br />
-              Tým GrowPORT
+              Tým ProjectYOU
             </Text>
             <Text style={footerContact}>
-              📧 info@growport.cz<br />
-              🌐 www.growport.cz
+              📧 info@projectyou.cz<br />
+              🌐 www.projectyou.cz
             </Text>
             <Text style={footerDisclaimer}>
               Tento email byl zaslán na adresu {customerEmail} jako potvrzení vaší objednávky.
