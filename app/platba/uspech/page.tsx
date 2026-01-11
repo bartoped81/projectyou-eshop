@@ -103,11 +103,7 @@ function OrderSuccessContent() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600">Číslo objednávky:</span>
-                  <span className="font-mono text-slate-900">{orderId}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-600">Variabilní symbol:</span>
-                  <span className="font-bold text-slate-900">{variableSymbol}</span>
+                  <span className="font-mono text-slate-900">{variableSymbol}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-600">Stav platby:</span>
