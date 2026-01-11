@@ -17,10 +17,11 @@ function OrderSuccessContent() {
   const orderId = searchParams.get("orderId");
   const { clearCart } = useCart();
 
-  // Clear cart when the success page loads
+  // Clear cart when the success page loads (only once)
   useEffect(() => {
     clearCart();
-  }, [clearCart]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   // Generate QR payment string (Czech QR payment standard)
   const generateQRPaymentString = () => {
