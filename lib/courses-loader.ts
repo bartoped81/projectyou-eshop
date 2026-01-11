@@ -78,6 +78,52 @@ export async function loadCoursesWithFutureDates(): Promise<CourseWithDates[]> {
 }
 
 /**
+ * Načte všechny kurzy s budoucími termíny včetně plných (pro kalendář)
+ */
+export async function loadAllCoursesForCalendar(): Promise<CourseWithDates[]> {
+  const { data, error } = await supabase
+    .from("courses")
+    .select(`
+      *,
+      course_dates (
+        id,
+        course_id,
+        start_date,
+        end_date,
+        location,
+        max_capacity,
+        current_booked_count,
+        is_active,
+        created_at,
+        updated_at
+      )
+    `)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("Error loading courses:", error);
+    return [];
+  }
+
+  // Filtrujeme pouze budoucí aktivní termíny (včetně plných)
+  const coursesWithFutureDates = data?.map((course: any) => ({
+    ...course,
+    course_dates: (course.course_dates || [])
+      .filter(
+        (date: CourseDate) =>
+          date.is_active &&
+          new Date(date.start_date) > new Date()
+      )
+      .sort(
+        (a: CourseDate, b: CourseDate) =>
+          new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
+      ),
+  }));
+
+  return coursesWithFutureDates || [];
+}
+
+/**
  * Získá krátké označení kurzu pro kalendář (např. "AI", "Impro")
  */
 export function getCourseShortName(courseTitle: string): string {
@@ -96,7 +142,12 @@ export function getCourseShortName(courseTitle: string): string {
 /**
  * Získá barvu pro kurz podle jeho typu
  */
-export function getCourseColor(courseTitle: string): string {
+export function getCourseColor(courseTitle: string, isFull: boolean = false): string {
+  // Pokud je kurz plný, použij šedou barvu
+  if (isFull) {
+    return "bg-slate-400 text-white";
+  }
+
   if (courseTitle.includes("AI") || courseTitle.includes("Akcelerátor")) {
     return "bg-blue-600 text-white";
   }
@@ -107,6 +158,13 @@ export function getCourseColor(courseTitle: string): string {
     return "bg-red-600 text-white";
   }
   return "bg-slate-600 text-white";
+}
+
+/**
+ * Kontroluje, zda je daný termín kurzu plný
+ */
+export function isCourseDateFull(courseDate: CourseDate): boolean {
+  return courseDate.current_booked_count >= courseDate.max_capacity;
 }
 
 /**

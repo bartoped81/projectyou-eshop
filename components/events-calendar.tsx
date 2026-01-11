@@ -8,6 +8,7 @@ import {
   getCourseShortName,
   getCourseColor,
   getCourseDateRange,
+  isCourseDateFull,
 } from "@/lib/courses-loader";
 
 interface EventsCalendarProps {
@@ -19,6 +20,7 @@ interface DayEvent {
   course: CourseWithDates;
   courseDate: CourseDate;
   isStartDate: boolean;
+  isFull: boolean;
 }
 
 export function EventsCalendar({ courses, onDateClick }: EventsCalendarProps) {
@@ -55,11 +57,13 @@ export function EventsCalendar({ courses, onDateClick }: EventsCalendarProps) {
         }
 
         const isStartDate = date.getTime() === startDate.getTime();
+        const isFull = isCourseDateFull(courseDate);
 
         eventsMap.get(dateKey)!.push({
           course,
           courseDate,
           isStartDate,
+          isFull,
         });
       });
     });
@@ -100,8 +104,9 @@ export function EventsCalendar({ courses, onDateClick }: EventsCalendarProps) {
     if (events.length === 0) return;
 
     const clickedDate = new Date(year, month, day);
+    // Filtruj pouze dostupné kurzy (ne plné)
     const coursesOnDate = events
-      .filter((e) => e.isStartDate)
+      .filter((e) => e.isStartDate && !e.isFull)
       .map((e) => ({ course: e.course, courseDate: e.courseDate }));
 
     if (coursesOnDate.length > 0 && onDateClick) {
@@ -155,7 +160,7 @@ export function EventsCalendar({ courses, onDateClick }: EventsCalendarProps) {
 
           const { day, events } = dayData;
           const hasEvents = events.length > 0;
-          const hasStartEvents = events.some((e) => e.isStartDate);
+          const hasStartEvents = events.some((e) => e.isStartDate && !e.isFull);
           const today = new Date();
           const isToday =
             today.getDate() === day &&
@@ -184,7 +189,7 @@ export function EventsCalendar({ courses, onDateClick }: EventsCalendarProps) {
                 <div className="flex flex-wrap gap-0.5 justify-center">
                   {events.slice(0, 2).map((event, idx) => {
                     const shortName = getCourseShortName(event.course.title);
-                    const colorClass = getCourseColor(event.course.title);
+                    const colorClass = getCourseColor(event.course.title, event.isFull);
 
                     return (
                       <span

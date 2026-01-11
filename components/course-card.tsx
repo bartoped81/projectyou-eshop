@@ -24,9 +24,11 @@ export function CourseCard({ course }: CourseCardProps) {
       {/* Obsah - vpravo */}
       <div className="flex-1 p-4 flex flex-col">
         <div className="flex-1">
-          <h2 className="text-lg font-bold text-slate-900 mb-1 font-urbanist group-hover:text-blue-600 transition-colors">
-            {course.title}
-          </h2>
+          <Link href={`/open-courses/${course.slug}`}>
+            <h2 className="text-lg font-bold text-slate-900 mb-1 font-urbanist group-hover:text-blue-600 transition-colors cursor-pointer hover:underline">
+              {course.title}
+            </h2>
+          </Link>
 
           <p className="text-sm text-slate-600 mb-3 line-clamp-2 leading-snug">
             {course.short_description}

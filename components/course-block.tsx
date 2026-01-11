@@ -56,17 +56,18 @@ export function CourseBlock({
     <div className="bg-white rounded-xl border-2 border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       {/* Header */}
       <div className={`bg-gradient-to-r ${colors.bg} p-6 border-b border-slate-200`}>
-        <div className="flex items-start gap-4 mb-4">
+        <div className="flex items-start gap-4 mb-2">
           <div className={`${colors.accent} text-white p-3 rounded-lg shrink-0`}>
             <span className="text-2xl">{icon}</span>
           </div>
           <div className="flex-1">
             <h4 className="text-xl font-bold text-slate-900 mb-1">{title}</h4>
             {subtitle && (
-              <p className={`text-sm ${colors.text} font-semibold`}>
+              <p className={`text-sm ${colors.text} font-semibold mb-1`}>
                 {subtitle}
               </p>
             )}
+            <p className="text-slate-700 leading-relaxed">{why}</p>
           </div>
         </div>
         {quote && (
@@ -77,20 +78,12 @@ export function CourseBlock({
       </div>
 
       {/* Body */}
-      <div className="p-6">
-        {/* Why section */}
-        <div className="mb-4">
-          <h5 className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-3 flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${colors.dot}`}></span>
-            PROČ TO POTŘEBUJETE
-          </h5>
-          <p className="text-slate-700 leading-relaxed">{why}</p>
-        </div>
+      <div className="p-4">
 
         {/* Toggle button */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full flex items-center justify-between py-3 px-4 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium rounded-lg transition-colors border border-slate-200 mt-4"
+          className="w-full flex items-center justify-between py-2 px-4 bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium rounded-lg transition-colors border border-slate-200"
         >
           <span>Zobrazit obsah bloku</span>
           <ChevronDown
@@ -106,7 +99,7 @@ export function CourseBlock({
             isOpen ? "max-h-[2000px] opacity-100" : "max-h-0 opacity-0"
           }`}
         >
-          <div className="pt-6 mt-4 border-t border-slate-200">
+          <div className="pt-4 mt-3 border-t border-slate-200">
             <h5 className="text-xs uppercase tracking-wider text-slate-500 font-bold mb-4">
               OBSAH BLOKU:
             </h5>

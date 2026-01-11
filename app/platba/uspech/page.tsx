@@ -2,10 +2,30 @@
 
 import Link from "next/link";
 import { CheckCircle, Home, Mail } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { QRCodeSVG } from "qrcode.react";
+import { Suspense } from "react";
 
 export const dynamic = 'force-dynamic';
 
-export default function OrderSuccessPage() {
+function OrderSuccessContent() {
+  const searchParams = useSearchParams();
+  const paymentMethod = searchParams.get("paymentMethod");
+  const variableSymbol = searchParams.get("variableSymbol");
+  const totalAmount = searchParams.get("totalAmount");
+  const orderId = searchParams.get("orderId");
+
+  // Generate QR payment string (Czech QR payment standard)
+  const generateQRPaymentString = () => {
+    if (!variableSymbol || !totalAmount) return "";
+
+    // Czech QR payment format (Short Payment Descriptor)
+    const accountNumber = "123456789";
+    const bankCode = "0100";
+    const amount = parseFloat(totalAmount).toFixed(2);
+
+    return `SPD*1.0*ACC:CZ0001000000000${accountNumber}*AM:${amount}*CC:CZK*MSG:Objednávka ${orderId}*X-VS:${variableSymbol}`;
+  };
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center py-12">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -23,6 +43,71 @@ export default function OrderSuccessPage() {
           <p className="text-lg text-slate-600 mb-8">
             Vaše objednávka byla úspěšně přijata a zpracovává se.
           </p>
+
+          {/* QR Code for QR Payment */}
+          {paymentMethod === "qr" && variableSymbol && totalAmount && (
+            <div className="bg-blue-50 rounded-lg p-6 mb-8">
+              <h3 className="font-semibold text-slate-900 mb-4 text-lg">
+                Naskenujte QR kód pro platbu
+              </h3>
+              <div className="bg-white p-6 rounded-lg inline-block mb-4">
+                <QRCodeSVG
+                  value={generateQRPaymentString()}
+                  size={256}
+                  level="M"
+                  includeMargin={true}
+                />
+              </div>
+              <div className="text-left bg-white rounded-lg p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Variabilní symbol:</span>
+                  <span className="font-bold text-slate-900">{variableSymbol}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Částka k úhradě:</span>
+                  <span className="font-bold text-blue-600 text-lg">
+                    {parseFloat(totalAmount).toLocaleString("cs-CZ")} Kč
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Číslo účtu:</span>
+                  <span className="font-mono text-slate-900">123456789/0100</span>
+                </div>
+              </div>
+              <p className="text-sm text-slate-600 mt-4">
+                Naskenujte QR kód mobilní aplikací vaší banky pro okamžité provedení platby.
+              </p>
+            </div>
+          )}
+
+          {/* Invoice Payment Info */}
+          {paymentMethod === "invoice" && variableSymbol && (
+            <div className="bg-blue-50 rounded-lg p-6 mb-8">
+              <h3 className="font-semibold text-slate-900 mb-4 text-lg">
+                Platební údaje
+              </h3>
+              <div className="text-left bg-white rounded-lg p-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Variabilní symbol:</span>
+                  <span className="font-bold text-slate-900">{variableSymbol}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Číslo účtu:</span>
+                  <span className="font-mono text-slate-900">123456789/0100</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Částka:</span>
+                  <span className="font-bold text-blue-600 text-lg">
+                    {totalAmount ? parseFloat(totalAmount).toLocaleString("cs-CZ") : "0"} Kč
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Splatnost:</span>
+                  <span className="text-slate-900">14 dní</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Info Box */}
           <div className="bg-blue-50 rounded-lg p-6 mb-8 text-left">
@@ -77,5 +162,20 @@ export default function OrderSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OrderSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-slate-600">Načítání...</p>
+        </div>
+      </div>
+    }>
+      <OrderSuccessContent />
+    </Suspense>
   );
 }

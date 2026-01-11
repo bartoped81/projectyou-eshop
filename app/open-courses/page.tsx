@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CourseCard } from "@/components/course-card";
 import { EventsCalendar } from "@/components/events-calendar";
-import { loadCoursesWithFutureDates, CourseWithDates, CourseDate } from "@/lib/courses-loader";
-import { DebugData } from "./debug-data";
+import { loadCoursesWithFutureDates, loadAllCoursesForCalendar, CourseWithDates, CourseDate } from "@/lib/courses-loader";
 
 export default function OpenCoursesPage() {
   const router = useRouter();
   const [courses, setCourses] = useState<CourseWithDates[]>([]);
+  const [allCoursesForCalendar, setAllCoursesForCalendar] = useState<CourseWithDates[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<{
     date: Date;
@@ -24,7 +24,9 @@ export default function OpenCoursesPage() {
     try {
       setLoading(true);
       const data = await loadCoursesWithFutureDates();
+      const allData = await loadAllCoursesForCalendar();
       setCourses(data);
+      setAllCoursesForCalendar(allData);
     } catch (err) {
       console.error("Error loading courses:", err);
     } finally {
@@ -98,7 +100,7 @@ export default function OpenCoursesPage() {
 
             {/* Pravý sloupec - Kalendář (sticky) */}
             <div className="lg:col-span-4">
-              <EventsCalendar courses={courses} onDateClick={handleDateClick} />
+              <EventsCalendar courses={allCoursesForCalendar} onDateClick={handleDateClick} />
             </div>
           </div>
         </div>
@@ -156,9 +158,6 @@ export default function OpenCoursesPage() {
           </div>
         </div>
       )}
-
-      {/* Debug panel */}
-      <DebugData />
     </main>
   );
 }

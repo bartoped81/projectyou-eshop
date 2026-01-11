@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCart } from "@/lib/cart-context";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -49,10 +49,12 @@ export default function CheckoutPage() {
 
   const isCompany = watch("isCompany");
 
-  if (items.length === 0) {
-    router.push("/kosik");
-    return null;
-  }
+  // Redirect to cart if empty (but not during order submission)
+  useEffect(() => {
+    if (items.length === 0 && !isSubmitting) {
+      router.push("/kosik");
+    }
+  }, [items.length, router, isSubmitting]);
 
   const onSubmit = async (data: CheckoutFormData) => {
     if (paymentMethod === "card") {
@@ -100,9 +102,19 @@ export default function CheckoutPage() {
         throw new Error(result.error || "Neznámá chyba při zpracování objednávky");
       }
 
-      // Clear cart and redirect to success page
-      clearCart();
-      router.push("/platba/uspech");
+      // Redirect to success page with order details first, then clear cart
+      const params = new URLSearchParams({
+        orderId: result.orderId,
+        variableSymbol: result.variableSymbol,
+        paymentMethod: paymentMethod,
+        totalAmount: totalPriceWithVat.toString(),
+      });
+      router.push(`/platba/uspech?${params.toString()}`);
+
+      // Clear cart after navigation starts (with small delay to ensure navigation begins)
+      setTimeout(() => {
+        clearCart();
+      }, 100);
     } catch (error) {
       console.error("Error processing order:", error);
       alert("Chyba při zpracování objednávky. Zkuste to prosím znovu.");
@@ -293,9 +305,34 @@ function CardPaymentModal({ totalAmount, onSuccess, onCancel }: { totalAmount: n
   const [error, setError] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const handleCardNumberChange = (value: string) => {
+    // Remove all non-digits
+    const digitsOnly = value.replace(/\D/g, "");
+    // Limit to 16 digits
+    const limited = digitsOnly.slice(0, 16);
+    // Add space after every 4 digits
+    const formatted = limited.replace(/(\d{4})(?=\d)/g, "$1 ");
+    setCardNumber(formatted);
+  };
+
+  const handleExpiryChange = (value: string) => {
+    // Remove all non-digits
+    const digitsOnly = value.replace(/\D/g, "");
+    // Limit to 4 digits (MMYY)
+    const limited = digitsOnly.slice(0, 4);
+    // Add slash after 2 digits
+    if (limited.length >= 2) {
+      setExpiry(limited.slice(0, 2) + "/" + limited.slice(2));
+    } else {
+      setExpiry(limited);
+    }
+  };
+
   const handlePayment = async () => {
     setError("");
-    if (cardNumber !== "1111111111111111" || expiry !== "11/11" || cvc !== "111") {
+    // Remove spaces and slash for validation
+    const cardNumberClean = cardNumber.replace(/\s/g, "");
+    if (cardNumberClean !== "1111111111111111" || expiry !== "11/11" || cvc !== "111") {
       setError("Neplatná karta. Pro testování použijte: 1111 1111 1111 1111, 11/11, 111");
       return;
     }
@@ -316,12 +353,12 @@ function CardPaymentModal({ totalAmount, onSuccess, onCancel }: { totalAmount: n
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">Číslo karty</label>
-            <input type="text" value={cardNumber} onChange={(e) => setCardNumber(e.target.value.replace(/\s/g, ""))} maxLength={16} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="1111 1111 1111 1111" />
+            <input type="text" value={cardNumber} onChange={(e) => handleCardNumberChange(e.target.value)} maxLength={19} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="1111 1111 1111 1111" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Platnost</label>
-              <input type="text" value={expiry} onChange={(e) => setExpiry(e.target.value)} maxLength={5} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="11/11" />
+              <input type="text" value={expiry} onChange={(e) => handleExpiryChange(e.target.value)} maxLength={5} className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="MM/YY" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">CVC</label>

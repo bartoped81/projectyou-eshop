@@ -122,7 +122,7 @@ serve(async (req) => {
       // Update course date capacity
       const { data: courseDate, error: fetchError } = await supabaseClient
         .from("course_dates")
-        .select("available_spots")
+        .select("current_booked_count")
         .eq("id", item.courseDateId)
         .single();
 
@@ -130,11 +130,11 @@ serve(async (req) => {
         throw new Error(`Failed to fetch course date: ${fetchError.message}`);
       }
 
-      const newAvailableSpots = (courseDate.available_spots || 0) - item.quantity;
+      const newBookedCount = (courseDate.current_booked_count || 0) + item.quantity;
 
       const { error: updateError } = await supabaseClient
         .from("course_dates")
-        .update({ available_spots: newAvailableSpots })
+        .update({ current_booked_count: newBookedCount })
         .eq("id", item.courseDateId);
 
       if (updateError) {

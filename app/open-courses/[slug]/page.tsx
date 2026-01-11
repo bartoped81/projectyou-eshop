@@ -132,48 +132,6 @@ export default function CourseDetailPage() {
           </div>
         </section>
 
-        {/* Pro koho je kurz určen - Only for AI course */}
-        {slug === "ai-firemni-akcelerator" && (
-          <section className="py-12 bg-white border-t border-slate-200">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-                  Pro koho je kurz určen?
-                </h2>
-                <p className="mt-3 text-lg text-slate-600 max-w-3xl mx-auto">
-                  Kurz je připraven specificky pro dvě klíčové role ve středních
-                  a menších firmách:
-                </p>
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4 max-w-5xl mx-auto">
-                <TargetAudienceCard
-                  title="Majitelé a nejvyšší vedení"
-                  description="Kteří potřebují strategický nadhled, chtějí firmu rozvíjet, ale topí se v každodenní operativě."
-                  icon="briefcase"
-                  bgColor="bg-blue-100"
-                  textColor="text-blue-600"
-                />
-                <TargetAudienceCard
-                  title='"Pravá ruka majitele" (Implementátoři)'
-                  description='Provozní ředitelé, schopní manažeři nebo nástupci, kteří mají za úkol přinést do firmy inovaci, "odmakat" zavedení do praxe a naučit to ostatní.'
-                  icon="zap"
-                  bgColor="bg-cyan-100"
-                  textColor="text-cyan-600"
-                />
-              </div>
-
-              <div className="mt-6 text-center bg-slate-100 p-3 rounded-lg max-w-3xl mx-auto border border-slate-200">
-                <p className="text-slate-600 text-xs">
-                  (Poznámka: Kurz je vhodný i pro ty, kteří AI už používají, ale
-                  mají podezření, že využívají jen z malého procenta potenciálu
-                  nebo si nejsou jisti, jak s AI pracovat bezpečně.)
-                </p>
-              </div>
-            </div>
-          </section>
-        )}
-
         {/* Main Content Grid */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -182,6 +140,39 @@ export default function CourseDetailPage() {
               {/* Show CourseBlock components for AI course */}
               {slug === "ai-firemni-akcelerator" ? (
                 <>
+                  {/* Pro koho je kurz určen */}
+                  <div className="mb-12">
+                    <p className="text-lg text-slate-600 text-center max-w-3xl mx-auto">
+                      Kurz je připraven specificky pro dvě klíčové role ve středních
+                      a menších firmách:
+                    </p>
+
+                    <div className="grid md:grid-cols-2 gap-4 max-w-5xl mx-auto mt-6">
+                      <TargetAudienceCard
+                        title="Majitelé a nejvyšší vedení"
+                        description="Kteří potřebují strategický nadhled, chtějí firmu rozvíjet, ale topí se v každodenní operativě."
+                        icon="briefcase"
+                        bgColor="bg-blue-100"
+                        textColor="text-blue-600"
+                      />
+                      <TargetAudienceCard
+                        title='"Pravá ruka majitele" (Implementátoři)'
+                        description='Provozní ředitelé, schopní manažeři nebo nástupci, kteří mají za úkol přinést do firmy inovaci, "odmakat" zavedení do praxe a naučit to ostatní.'
+                        icon="zap"
+                        bgColor="bg-cyan-100"
+                        textColor="text-cyan-600"
+                      />
+                    </div>
+
+                    <div className="mt-6 text-center bg-white p-3 rounded-lg max-w-3xl mx-auto border border-slate-200">
+                      <p className="text-slate-600 text-sm">
+                        Poznámka: Kurz je vhodný i pro ty, kteří AI už používají, ale
+                        mají podezření, že využívají jen z malého procenta potenciálu
+                        nebo si nejsou jisti, jak s AI pracovat bezpečně.
+                      </p>
+                    </div>
+                  </div>
+
                   {/* Struktura kurzu - Intro text */}
                   <div className="text-center mb-12">
                     <h2 className="text-3xl font-bold text-slate-900 mb-4">
@@ -240,9 +231,8 @@ export default function CourseDetailPage() {
                       Pro koho je program určen?
                     </h2>
                     <p className="text-lg text-slate-600 max-w-3xl mx-auto text-center mb-8">
-                      Program je ideální pro firmy, které hledají autentický
-                      rozvoj a chtějí posílit svůj leadership v okamžicích, kdy
-                      jde do tuhého.
+                      Ideální pro lidi, kteří hledají autentický rozvoj a posílit
+                      svůj leadership v náročných okamžicích.
                     </p>
 
                     <div className="grid md:grid-cols-2 gap-6 mb-12">

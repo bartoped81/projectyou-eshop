@@ -71,13 +71,13 @@ export function TermSelection({
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-6 sticky top-24">
-      <h3 className="text-2xl font-bold text-slate-900 mb-6 font-urbanist">
+    <div className="bg-white border border-slate-200 rounded-xl p-4 lg:p-5 lg:sticky lg:top-24">
+      <h3 className="text-xl font-bold text-slate-900 mb-3 font-urbanist">
         Vyberte termín
       </h3>
 
       {/* Seznam termínů */}
-      <div className="space-y-3 mb-6">
+      <div className="space-y-2 mb-4 max-h-[400px] overflow-y-auto">
         {courseDates.map((date) => {
           const availableSpots = date.max_capacity - date.current_booked_count;
           const isLowCapacity = availableSpots < 5;
@@ -87,7 +87,7 @@ export function TermSelection({
             <button
               key={date.id}
               onClick={() => setSelectedTermId(date.id)}
-              className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+              className={`w-full text-left p-3 rounded-lg border-2 transition-all ${
                 isSelected
                   ? "border-blue-600 bg-blue-50"
                   : "border-slate-200 hover:border-blue-300"
@@ -126,8 +126,8 @@ export function TermSelection({
 
       {/* Výběr počtu osob */}
       {selectedTermId && (
-        <div className="mb-6">
-          <label className="block text-sm font-semibold text-slate-900 mb-3">
+        <div className="mb-4">
+          <label className="block text-sm font-semibold text-slate-900 mb-2">
             Počet osob
           </label>
           <div className="flex items-center justify-between border border-slate-300 rounded-lg p-3">
@@ -150,7 +150,7 @@ export function TermSelection({
       )}
 
       {/* Cena */}
-      <div className="mb-6 p-4 bg-slate-50 rounded-lg">
+      <div className="mb-4 p-3 bg-slate-50 rounded-lg">
         <div className="flex justify-between items-center">
           <span className="text-sm text-slate-600">Cena celkem:</span>
           <div className="text-right">
@@ -166,7 +166,7 @@ export function TermSelection({
       <button
         onClick={handleAddToCart}
         disabled={!selectedTermId}
-        className={`w-full py-4 rounded-lg font-semibold text-white transition-colors ${
+        className={`w-full py-3 rounded-lg font-semibold text-white transition-colors ${
           selectedTermId
             ? "bg-blue-600 hover:bg-blue-700"
             : "bg-slate-300 cursor-not-allowed"
