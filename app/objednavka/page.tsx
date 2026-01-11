@@ -7,7 +7,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { CheckCircle, CreditCard, FileText, QrCode } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 
 export const dynamic = 'force-dynamic';
 
@@ -67,7 +66,7 @@ export default function CheckoutPage() {
   const processOrder = async (data: CheckoutFormData) => {
     setIsSubmitting(true);
     try {
-      // Prepare payload for Edge Function
+      // Prepare payload for API
       const payload = {
         userData: {
           firstName: data.firstName,
@@ -89,16 +88,18 @@ export default function CheckoutPage() {
         totalPriceWithVat: totalPriceWithVat,
       };
 
-      // Call Edge Function
-      const { data: result, error } = await supabase.functions.invoke("process-order", {
-        body: payload,
+      // Call Next.js API Route
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       });
 
-      if (error) {
-        throw new Error(error.message);
-      }
+      const result = await response.json();
 
-      if (!result.success) {
+      if (!response.ok || !result.success) {
         throw new Error(result.error || "Neznámá chyba při zpracování objednávky");
       }
 
