@@ -172,6 +172,7 @@ export async function POST(req: NextRequest) {
           }),
         });
 
+        console.log("Email result:", JSON.stringify(emailResult, null, 2));
         console.log("Order created and confirmation email sent:", order.id, "Email ID:", emailResult.data?.id);
       } else {
         console.log("Order created (email skipped - no API key):", order.id);
