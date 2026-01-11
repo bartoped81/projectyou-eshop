@@ -231,7 +231,10 @@ export function TermSelection({
                 Pokračovat v nákupu
               </button>
               <button
-                onClick={() => router.push("/kosik")}
+                onClick={() => {
+                  setShowModal(false);
+                  router.push("/kosik");
+                }}
                 className="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
               >
                 Přejít do košíku

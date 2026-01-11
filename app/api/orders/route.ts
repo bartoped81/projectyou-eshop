@@ -149,7 +149,9 @@ export async function POST(req: NextRequest) {
       if (resendApiKey) {
         const resend = new Resend(resendApiKey);
 
-        await resend.emails.send({
+        console.log(`Sending email to: ${userData.email} from: ${fromEmail}`);
+
+        const emailResult = await resend.emails.send({
           from: fromEmail,
           to: userData.email,
           subject: `Potvrzení objednávky #${variableSymbol} - ProjectYOU`,
@@ -170,7 +172,7 @@ export async function POST(req: NextRequest) {
           }),
         });
 
-        console.log("Order created and confirmation email sent:", order.id);
+        console.log("Order created and confirmation email sent:", order.id, "Email ID:", emailResult.data?.id);
       } else {
         console.log("Order created (email skipped - no API key):", order.id);
       }
