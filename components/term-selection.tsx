@@ -14,6 +14,21 @@ interface TermSelectionProps {
   pricePerPerson: number;
 }
 
+// Helper function for correct Czech pluralization
+function getCapacityText(count: number, isLowCapacity: boolean): string {
+  if (isLowCapacity) {
+    // For "Poslední X místo/místa"
+    if (count === 1) return 'Poslední 1 místo!';
+    if (count >= 2 && count <= 4) return `Poslední ${count} místa!`;
+    return `Poslední ${count} míst!`;
+  } else {
+    // For "Volných X míst/místa"
+    if (count === 1) return 'Volné 1 místo';
+    if (count >= 2 && count <= 4) return `Volná ${count} místa`;
+    return `Volných ${count} míst`;
+  }
+}
+
 export function TermSelection({
   courseTitle,
   courseSlug,
@@ -126,9 +141,7 @@ export function TermSelection({
                           : "text-green-600"
                       }
                     >
-                      {isLowCapacity
-                        ? `Poslední ${availableSpots} místa!`
-                        : `Volných ${availableSpots} míst`}
+                      {getCapacityText(availableSpots, isLowCapacity)}
                     </span>
                   </div>
                 </div>

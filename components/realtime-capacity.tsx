@@ -10,6 +10,13 @@ interface RealtimeCapacityProps {
   initialCurrentBooked: number;
 }
 
+// Helper function for correct Czech pluralization
+function getAvailableSpotsText(count: number): string {
+  if (count === 1) return '1 místo';
+  if (count >= 2 && count <= 4) return `${count} místa`;
+  return `${count} míst`;
+}
+
 export function RealtimeCapacity({
   courseId,
   courseDateId,
@@ -50,8 +57,8 @@ export function RealtimeCapacity({
   const getStatusText = () => {
     if (availableSpots === 0) return 'Obsazeno';
     if (availableSpots === 1) return 'Poslední místo!';
-    if (percentFull >= 80) return `Zbývá ${availableSpots} míst`;
-    return `Volných ${availableSpots} míst`;
+    if (percentFull >= 80) return `Zbývá ${getAvailableSpotsText(availableSpots)}`;
+    return `Volných ${getAvailableSpotsText(availableSpots)}`;
   };
 
   return (
