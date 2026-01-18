@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
+import ReactPDF from '@react-pdf/renderer';
+import QRCode from 'qrcode';
 import OrderConfirmationEmail from "@/emails/order-confirmation";
+import { ProformaInvoice } from "@/lib/pdf/proforma-invoice";
 
 interface OrderItem {
   courseDateId: string;
@@ -141,7 +144,87 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. Send confirmation email
+    // 3. Generate QR code for payment
+    let qrCodeDataUrl: string | undefined = undefined;
+    try {
+      const accountNumber = "123456789";
+      const bankCode = "0100";
+      const amount = totalPriceWithVat.toFixed(2);
+
+      // Generate QR code data in SPD (Short Payment Descriptor) format
+      const qrData = `SPD*1.0*ACC:CZ0001000000000${accountNumber}*AM:${amount}*CC:CZK*MSG:Objednávka ${variableSymbol}*X-VS:${variableSymbol}`;
+
+      // Generate QR code as data URL
+      qrCodeDataUrl = await QRCode.toDataURL(qrData, {
+        width: 300,
+        margin: 1,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF',
+        },
+      });
+
+      console.log("QR code generated successfully");
+    } catch (qrError) {
+      console.error("Failed to generate QR code:", qrError);
+      // Continue without QR code
+    }
+
+    // 4. Generate proforma invoice PDF
+    let pdfBuffer: Buffer | null = null;
+    try {
+      const invoiceDate = new Date();
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 14); // 14 days to pay
+
+      const pdfStream = await ReactPDF.renderToStream(
+        ProformaInvoice({
+          invoiceNumber: `PF${variableSymbol}`,
+          variableSymbol,
+          issueDate: invoiceDate.toLocaleDateString('cs-CZ'),
+          dueDate: dueDate.toLocaleDateString('cs-CZ'),
+          customer: {
+            name: `${userData.firstName} ${userData.lastName}`,
+            email: userData.email,
+            phone: userData.phone,
+            street: userData.street,
+            city: userData.city,
+            zip: userData.zip,
+            isCompany: userData.isCompany,
+            companyName: userData.companyName,
+            ico: userData.ico,
+            dic: userData.dic,
+          },
+          items: items.map(item => ({
+            courseTitle: item.courseTitle,
+            startDate: item.startDate,
+            endDate: item.endDate,
+            location: item.location,
+            quantity: item.quantity,
+            pricePerPerson: item.pricePerPerson,
+            totalPrice: item.pricePerPerson * item.quantity,
+          })),
+          totalWithoutVat: totalPriceWithoutVat,
+          vat: totalVat,
+          totalWithVat: totalPriceWithVat,
+          qrCodeDataUrl,
+        })
+      );
+
+      // Convert stream to buffer
+      const chunks: Uint8Array[] = [];
+      for await (const chunk of pdfStream) {
+        chunks.push(chunk);
+      }
+      pdfBuffer = Buffer.concat(chunks);
+
+      console.log("PDF generated successfully, size:", pdfBuffer.length);
+    } catch (pdfError) {
+      console.error("Failed to generate PDF:", pdfError);
+      // Continue without PDF attachment
+    }
+
+    // 5. Send confirmation email with PDF attachment
     try {
       const resendApiKey = process.env.RESEND_API_KEY;
       const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
@@ -151,7 +234,7 @@ export async function POST(req: NextRequest) {
 
         console.log(`Sending email to: ${userData.email} from: ${fromEmail}`);
 
-        const emailResult = await resend.emails.send({
+        const emailData: any = {
           from: fromEmail,
           to: userData.email,
           subject: `Potvrzení objednávky #${variableSymbol} - ProjectYOU`,
@@ -170,7 +253,19 @@ export async function POST(req: NextRequest) {
             totalPriceWithVat,
             paymentMethod,
           }),
-        });
+        };
+
+        // Attach PDF if generated
+        if (pdfBuffer) {
+          emailData.attachments = [
+            {
+              filename: `zalohova-faktura-${variableSymbol}.pdf`,
+              content: pdfBuffer,
+            },
+          ];
+        }
+
+        const emailResult = await resend.emails.send(emailData);
 
         console.log("Email result:", JSON.stringify(emailResult, null, 2));
         console.log("Order created and confirmation email sent:", order.id, "Email ID:", emailResult.data?.id);
